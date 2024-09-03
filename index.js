@@ -8,7 +8,8 @@ import cors from 'cors'
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node'
 const app = express();
 
-
+console.log(process.env.CLERK_PUBLISHABLE_KEY)
+console.log(process.env.CLERK_SECRET_KEY)
 
 
 app.use(cors({
