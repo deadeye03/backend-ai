@@ -5,17 +5,21 @@ import Chat from './model/chat.js'
 import UserChats from './model/chatsUser.js'
 import 'dotenv/config'
 import cors from 'cors'
+import path from "path";
+import url, { fileURLToPath } from "url";
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node'
 const app = express();
 
 console.log(process.env.CLERK_PUBLISHABLE_KEY)
 console.log(process.env.CLERK_SECRET_KEY)
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors({
     origin: process.env.CLIENT_URL,
     credentials:true
 }));
+console.log(process.env.CLIENT_URL)
 app.use(express.json());
 
 const connect = async () => {
@@ -37,7 +41,7 @@ app.get('/api/upload', (req, res) => {
     var result = imagekit.getAuthenticationParameters();
     res.send(result);
 })
-app.post('/api/chats',ClerkExpressRequireAuth({ debug: true }), async (req, res) => {
+app.post('/api/chats',ClerkExpressRequireAuth(), async (req, res) => {
     const userId=req.auth.userId;
     console.log(userId)
     const { text } = req.body;
@@ -76,7 +80,7 @@ app.post('/api/chats',ClerkExpressRequireAuth({ debug: true }), async (req, res)
         res.status(500).send('Error during save chats')
     }
 })
-app.get('/api/userChats',ClerkExpressRequireAuth(),async (req,res)=>{
+app.get('/api/userChats',ClerkExpressRequireAuth({debug:true}),async (req,res)=>{
     const userId=req.auth.userId;
     try {
         const userChats=await UserChats.find({user_id:userId})
@@ -135,6 +139,12 @@ app.put("/api/chats/:id", ClerkExpressRequireAuth(), async (req, res) => {
     }
   });
 
+  // PRODUCTION
+app.use(express.static(path.join(__dirname, "/client/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "/client/dist", "index.html"));
+});
 app.use((err, req, res, next) => {
     console.error(err.stack)
     res.status(401).send('Unauthenticated!')
